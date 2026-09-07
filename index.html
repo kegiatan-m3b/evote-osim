@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Vote OSIM MTsN 3 Banyuwangi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { background-color: #f0fdf4; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+    .fade-in { animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; }
+    ::-webkit-scrollbar { height: 8px; width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    
+    /* Animasi Paku */
+    @keyframes pakuCoblos { 0% { transform: translateY(-100px) rotate(15deg) scale(1.5); opacity: 0; } 20% { opacity: 1; } 50% { transform: translateY(10px) rotate(0deg) scale(1); } 70% { transform: translateY(0px) rotate(0deg) scale(1); } 100% { transform: translateY(-50px) rotate(0deg) scale(0.8); opacity: 0; } }
+    .animate-paku { animation: pakuCoblos 0.8s ease-in-out forwards; }
+    @keyframes lubangCoblos { 0% { opacity: 0; transform: scale(0); } 49% { opacity: 0; transform: scale(0); } 50% { opacity: 1; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
+    .animate-lubang { animation: lubangCoblos 0.8s ease-in-out forwards; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // 🔴 [PENTING] PASTE URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+    const API_URL = "https://script.google.com/macros/s/AKfycbzM5kTreVvqb1EUQpP_r8lHu6jveeZj0FaFcbpiVwpluI7Li5bC_tGBKPTGlueQLc_r/exec"; 
+    
+    // Konfigurasi Link Gambar Default (Bisa pakai link GitHub atau Drive Thumbnail)
+    const LOGO_URL = "https://drive.google.com/thumbnail?id=1fBknq6ubJX72f-wgU56xdxJyO06p1m2i&sz=w500";
+
+    // FUNGSI KOMUNIKASI FETCH API KE GOOGLE SHEETS
+    async function fetchAPI(action, payload = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Wajib text/plain untuk GAS
+          body: JSON.stringify({ action, payload })
+        });
+        const json = await response.json();
+        if (json.status === 'error') throw new Error(json.message);
+        return json.data;
+      } catch (err) {
+        alert("Gagal terhubung ke Server. Pastikan koneksi internet stabil.");
+        throw err;
+      }
+    }
+
+    function Modal({ isOpen, onClose, title, children }) {
+      if (!isOpen) return null;
+      return (
+        <div className="fixed inset-0 flex items-center justify-center modal-overlay p-4 fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-emerald-700 text-white p-4 flex justify-between items-center">
+              <h3 className="font-bold text-lg">{title}</h3>
+              <button onClick={onClose} className="text-white hover:text-red-300 font-bold text-xl">×</button>
+            </div>
+            <div className="p-6 overflow-y-auto">{children}</div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [view, setView] = useState('home'); 
+      const [data, setData] = useState({ guru: [], siswa: [], kelas: [], kandidat: [] });
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => { if(view === 'home') loadInitialData(); }, [view]);
+
+      const loadInitialData = () => {
+        setLoading(true);
+        fetchAPI('getInitialData').then(res => {
+          setData(res); setLoading(false);
+        }).catch(() => setLoading(false));
+      };
+
+      return (
+        <div className="min-h-screen text-gray-800 flex flex-col">
+          <header className="bg-emerald-700 text-white p-4 shadow-lg sticky top-0 z-50">
+            <div className="container mx-auto flex justify-between items-center max-w-6xl">
+              <div className="flex items-center space-x-3">
+                <img src={LOGO_URL} alt="Logo" className="w-12 h-12 bg-white rounded-full p-0.5 object-cover" />
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">E-Vote OSIM</h1>
+                  <p className="text-xs md:text-sm text-emerald-100">MTsN 3 Banyuwangi</p>
+                </div>
+              </div>
+              {view === 'home' ? (
+                <button onClick={() => setView('login')} className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-bold transition shadow">Login Admin</button>
+              ) : (
+                <button onClick={() => setView('home')} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold transition shadow">Keluar Aplikasi</button>
+              )}
+            </div>
+          </header>
+
+          <main className={`flex-1 ${view === 'admin' ? '' : 'container mx-auto p-4 max-w-6xl mt-4'} fade-in`}>
+            {loading && view === 'home' && (
+              <div className="text-center mt-20">
+                <svg className="animate-spin h-10 w-10 text-emerald-600 mx-auto mb-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                <div className="text-emerald-600 font-bold text-xl">Menghubungkan ke Database...</div>
+              </div>
+            )}
+            {!loading && view === 'home' && <VotingFlow data={data} onReload={loadInitialData} />}
+            {view === 'login' && <LoginScreen setView={setView} />}
+            {view === 'admin' && <AdminDashboard />}
+            {view === 'petugas' && <PetugasDashboard />}
+          </main>
+        </div>
+      );
+    }
+
+    function VotingFlow({ data, onReload }) {
+      const [step, setStep] = useState(1);
+      const [kategori, setKategori] = useState('');
+      const [pilihanKelas, setPilihanKelas] = useState('');
+      const [namaPemilih, setNamaPemilih] = useState('');
+      const [kandidatPilihan, setKandidatPilihan] = useState(null);
+      const [isSubmitting, setIsSubmitting] = useState(false);
+      const [alertInfo, setAlertInfo] = useState({ show: false, msg: '' });
+      const [coblosAnim, setCoblosAnim] = useState(null); 
+
+      const filterNama = kategori === 'Guru' ? data.guru : data.siswa.filter(s => s.kelas === pilihanKelas);
+
+      const handleSubmit = () => {
+        setIsSubmitting(true);
+        fetchAPI('submitVote', { kategori, namaPemilih, idKandidat: kandidatPilihan })
+          .then(res => {
+            setAlertInfo({ show: true, msg: res.message });
+            setStep(1); setKategori(''); setPilihanKelas(''); setNamaPemilih(''); setKandidatPilihan(null);
+            setIsSubmitting(false); onReload();
+          }).catch(() => setIsSubmitting(false));
+      };
+
+      const handleCoblos = (id) => {
+        if(coblosAnim) return; 
+        setCoblosAnim(id);
+        setTimeout(() => { setKandidatPilihan(id); setCoblosAnim(null); }, 800);
+      };
+
+      return (
+        <div className="glass-card rounded-3xl shadow-2xl p-6 md:p-8 max-w-5xl mx-auto">
+          <Modal isOpen={alertInfo.show} onClose={() => setAlertInfo({show:false, msg:''})} title="Informasi Sistem">
+            <div className="text-center py-4">
+              <div className="text-5xl mb-4">🎉</div>
+              <p className="text-lg font-bold text-emerald-700">{alertInfo.msg}</p>
+              <button onClick={() => setAlertInfo({show:false, msg:''})} className="mt-6 bg-emerald-600 text-white px-6 py-2 rounded-xl cursor-pointer">OK, Tutup</button>
+            </div>
+          </Modal>
+
+          {step === 1 && (
+            <div className="text-center fade-in">
+              <h2 className="text-3xl font-black mb-8 text-emerald-800">Masuk Sebagai Pemilih?</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                <button onClick={() => { setKategori('Guru'); setStep(2); }} className="p-12 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-3xl cursor-pointer font-bold text-2xl shadow-sm transform transition hover:-translate-y-1">👨‍🏫 Guru / Pegawai</button>
+                <button onClick={() => { setKategori('Siswa'); setStep(2); }} className="p-12 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 rounded-3xl cursor-pointer font-bold text-2xl shadow-sm transform transition hover:-translate-y-1">👨‍🎓 Siswa MTsN</button>
+              </div>
+            </div>
+          )}
+          
+          {step === 2 && (
+            <div className="fade-in max-w-md mx-auto">
+              <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Identitas {kategori}</h2>
+              {kategori === 'Siswa' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-2 text-gray-600">Pilih Kelas</label>
+                  <select className="w-full p-4 border-2 rounded-2xl bg-white text-lg font-medium outline-none focus:border-emerald-500" value={pilihanKelas} onChange={(e) => setPilihanKelas(e.target.value)}>
+                    <option value="">-- Pilih Kelas --</option>
+                    {data.kelas.map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </div>
+              )}
+              {(kategori === 'Guru' || (kategori === 'Siswa' && pilihanKelas)) && (
+                <div className="mb-8 fade-in">
+                  <label className="block text-sm font-semibold mb-2 text-gray-600">Pilih Nama Anda</label>
+                  <select className="w-full p-4 border-2 rounded-2xl bg-white text-lg font-medium outline-none focus:border-emerald-500" value={namaPemilih} onChange={(e) => setNamaPemilih(e.target.value)}>
+                    <option value="">-- Pilih Nama --</option>
+                    {filterNama.map(p => <option key={p.id} value={p.nama} disabled={p.status === 'Sudah'}>{p.nama} {p.status === 'Sudah' ? '(Telah Memilih)' : ''}</option>)}
+                  </select>
+                </div>
+              )}
+              <div className="flex justify-between mt-8">
+                <button onClick={() => setStep(1)} className="px-6 py-4 bg-gray-200 rounded-2xl cursor-pointer font-bold text-gray-700">Kembali</button>
+                <button onClick={() => setStep(3)} disabled={!namaPemilih} className="px-8 py-4 bg-emerald-600 rounded-2xl text-white font-bold disabled:opacity-50 cursor-pointer shadow-lg hover:bg-emerald-700">Buka Surat Suara ➔</button>
+              </div>
+            </div>
+          )}
+          
+          {step === 3 && (
+            <div className="fade-in">
+              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl mb-8 text-center max-w-2xl mx-auto">
+                <h2 className="text-3xl font-black text-emerald-800">Surat Suara Digital</h2>
+                <p className="text-emerald-600 font-medium mt-1">Sentuh area foto / kotak kandidat untuk Mencoblos.</p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                {data.kandidat.map(k => (
+                  <div key={k.id} onClick={() => handleCoblos(k.id)} 
+                    className={`relative cursor-pointer rounded-3xl overflow-hidden border-[6px] transition-all duration-300 transform 
+                    ${kandidatPilihan === k.id ? 'border-emerald-600 ring-[10px] ring-emerald-200 shadow-2xl scale-[1.02]' : 'border-gray-200 shadow-xl bg-white hover:border-emerald-400'}`}>
+                    
+                    {coblosAnim === k.id && (
+                      <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+                        <svg className="w-40 h-40 text-gray-800 drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] animate-paku absolute" fill="currentColor" viewBox="0 0 24 24"><path d="M11 2h2v16l-1 4-1-4V2zm-3 2h8a1 1 0 010 2H8a1 1 0 010-2z" /></svg>
+                        <div className="w-10 h-10 bg-black rounded-full absolute animate-lubang shadow-[inset_0_3px_8px_rgba(0,0,0,0.9)]"></div>
+                      </div>
+                    )}
+                    {kandidatPilihan === k.id && coblosAnim === null && (
+                      <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
+                        <div className="w-10 h-10 bg-black rounded-full shadow-[inset_0_3px_8px_rgba(0,0,0,0.9)] opacity-95"></div>
+                      </div>
+                    )}
+
+                    <div className="h-96 md:h-[32rem] bg-gray-100 relative">
+                      {k.foto ? <img src={k.foto} className="w-full h-full object-cover" onError={(e)=>{e.target.src="https://via.placeholder.com/400x500?text=Foto+Gagal+Dimuat"}} /> : <div className="flex h-full items-center justify-center text-gray-400 font-medium">Foto Tidak Ditemukan</div>}
+                      <div className="absolute top-4 right-4 bg-emerald-600 text-white font-black w-16 h-16 rounded-full flex items-center justify-center text-4xl border-4 border-white shadow-xl">{k.no}</div>
+                    </div>
+                    
+                    <div className="p-8 text-center bg-white relative z-10">
+                      <h3 className="font-black text-3xl text-emerald-900 leading-tight">{k.ketua}</h3>
+                      <p className="text-gray-500 font-bold tracking-widest text-sm mt-1 uppercase">Calon Ketua</p>
+                      <div className="my-5 flex items-center justify-center">
+                        <div className="border-t-2 border-dashed border-gray-300 w-1/4"></div><span className="mx-4 text-emerald-600 font-bold">&</span><div className="border-t-2 border-dashed border-gray-300 w-1/4"></div>
+                      </div>
+                      <h3 className="font-black text-3xl text-emerald-900 leading-tight">{k.wakil}</h3>
+                      <p className="text-gray-500 font-bold tracking-widest text-sm mt-1 uppercase">Calon Wakil</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-12 flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-6 rounded-2xl border-2 border-gray-200 gap-4">
+                <button onClick={() => setStep(2)} className="w-full sm:w-auto px-8 py-4 bg-gray-300 hover:bg-gray-400 rounded-2xl cursor-pointer font-bold text-gray-700 text-lg">Ganti Identitas</button>
+                <button onClick={handleSubmit} disabled={!kandidatPilihan || isSubmitting || coblosAnim !== null} 
+                  className="w-full sm:w-auto px-12 py-5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white font-black text-2xl disabled:opacity-50 cursor-pointer shadow-xl transform transition active:scale-95 flex items-center justify-center">
+                  {isSubmitting ? 'Mengirim Suara...' : (kandidatPilihan ? 'KIRIM KE KOTAK SUARA 🗳️' : 'BELUM ADA PILIHAN')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function LoginScreen({ setView }) {
+      const [role, setRole] = useState('Admin');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleLogin = (e) => {
+        e.preventDefault(); setLoading(true); setError('');
+        fetchAPI('authenticateUser', { role, password }).then(res => {
+          setLoading(false);
+          if (res.success) setView(res.role === 'Admin' ? 'admin' : 'petugas'); else setError(res.message);
+        }).catch(() => setLoading(false));
+      };
+
+      return (
+        <div className="max-w-md mx-auto glass-card rounded-3xl shadow-2xl p-10 mt-10 border-t-8 border-emerald-600">
+          <h2 className="text-3xl font-black text-center text-emerald-800 mb-8">Akses Terbatas</h2>
+          {error && <div className="bg-red-100 text-red-700 p-4 rounded-xl mb-6 text-center font-bold">{error}</div>}
+          <form onSubmit={handleLogin}>
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-2 text-gray-700">Masuk Sebagai</label>
+              <select className="w-full p-4 border-2 rounded-xl bg-white font-medium outline-none" value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="Admin">Admin Pusat</option>
+                <option value="Petugas">Petugas KPPS</option>
+              </select>
+            </div>
+            <div className="mb-8">
+              <label className="block text-sm font-bold mb-2 text-gray-700">Kata Sandi</label>
+              <input type="password" placeholder="••••••••" className="w-full p-4 border-2 rounded-xl font-medium outline-none" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-4 rounded-xl hover:bg-emerald-700 cursor-pointer text-xl shadow-lg">{loading ? 'Memeriksa...' : 'MASUK'}</button>
+          </form>
+        </div>
+      );
+    }
+
+    function AdminDashboard() {
+      const [sidebarOpen, setSidebarOpen] = useState(true);
+      const [activeMenu, setActiveMenu] = useState('Siswa');
+      const [tableData, setTableData] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [modalForm, setModalForm] = useState({ show: false, action: '', rowNum: null, rowData: {} });
+      const [imageModal, setImageModal] = useState('');
+      const [filterKelas, setFilterKelas] = useState('Semua');
+      const [selectedRows, setSelectedRows] = useState([]); 
+
+      const formSchema = { 'Siswa': ['ID_Siswa', 'Nama_Siswa', 'Kelas', 'Status_Vote'], 'Guru': ['ID_Guru', 'Nama_Guru', 'Status_Vote'], 'Kandidat': ['ID_Kandidat', 'No_Urut', 'Nama_Ketua', 'Nama_Wakil', 'Foto_URL'] };
+
+      const loadData = (menu) => {
+        setLoading(true); setTableData([]); setSelectedRows([]);
+        fetchAPI('adminGetData', { sheetName: menu }).then(res => { setTableData(res); setLoading(false); }).catch(()=>setLoading(false));
+      };
+
+      useEffect(() => { loadData(activeMenu); setFilterKelas('Semua'); }, [activeMenu]);
+
+      const handleSave = (e) => {
+        e.preventDefault(); setLoading(true); setModalForm({ ...modalForm, show: false });
+        const rowArray = formSchema[activeMenu].map(field => modalForm.rowData[field] || '');
+        fetchAPI('adminCrud', { sheetName: activeMenu, action: modalForm.action, rowNum: modalForm.rowNum, rowData: rowArray })
+          .then(() => loadData(activeMenu));
+      };
+
+      const handleHapusMassal = () => {
+        if(selectedRows.length === 0) return alert("Centang minimal 1 data di tabel!");
+        if(confirm(`YAKIN HAPUS ${selectedRows.length} DATA?`)) {
+          setLoading(true);
+          fetchAPI('adminDeleteMultiple', { sheetName: activeMenu, rowNums: selectedRows })
+            .then(res => { alert(res.message); loadData(activeMenu); });
+        }
+      };
+
+      // FOTO PASTE (GitHub Ready)
+      const handleFotoPaste = (e) => {
+        let url = e.target.value;
+        const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          url = `https://lh3.googleusercontent.com/d/${match[1]}=s1000`; 
+        }
+        setModalForm(prev => ({ ...prev, rowData: { ...prev.rowData, Foto_URL: url } }));
+      };
+
+      const daftarKelasAdmin = activeMenu === 'Siswa' ? [...new Set(tableData.map(r => r.Kelas))].filter(Boolean).sort() : [];
+      const filteredData = tableData.filter(row => activeMenu !== 'Siswa' || filterKelas === 'Semua' || row.Kelas === filterKelas);
+
+      return (
+        <div className="flex bg-white h-[calc(100vh-80px)] -mx-4 -mt-4 overflow-hidden border-t border-gray-200">
+          <Modal isOpen={!!imageModal} onClose={() => setImageModal('')} title="Pratinjau Foto"><img src={imageModal} className="w-full h-auto rounded-lg" /></Modal>
+          <Modal isOpen={modalForm.show} onClose={() => setModalForm({show:false, rowData:{}})} title={modalForm.action === 'add' ? 'Tambah Data' : 'Edit Data'}>
+            <form onSubmit={handleSave} className="space-y-4">
+              {formSchema[activeMenu].map(field => (
+                <div key={field}>
+                  <label className="block text-sm font-bold mb-1">{field.replace('_', ' ')}</label>
+                  {field === 'Foto_URL' ? (
+                    <div className="space-y-1">
+                      <input type="text" className="w-full p-3 border rounded bg-gray-50" value={modalForm.rowData[field] || ''} onChange={handleFotoPaste} placeholder="Paste link foto (Drive / GitHub)..." />
+                      <p className="text-[11px] text-gray-500">*Gunakan link dari repository GitHub Anda (contoh: https://github.com/.../foto.jpg) agar 100% aman anti blokir.</p>
+                    </div>
+                  ) : (<input type="text" className="w-full p-3 border rounded" value={modalForm.rowData[field] || ''} onChange={(e) => setModalForm(prev => ({ ...prev, rowData: { ...prev.rowData, [field]: e.target.value } }))} required />)}
+                </div>
+              ))}
+              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-3 rounded mt-4">Simpan Perubahan</button>
+            </form>
+          </Modal>
+
+          <div className={`bg-gray-800 text-white transition-all flex flex-col ${sidebarOpen ? 'w-64' : 'w-0'}`}>
+            <div className="p-4 font-bold border-b border-gray-700 whitespace-nowrap text-lg">📁 Database</div>
+            <ul className="flex-1 overflow-y-auto">
+              {['Siswa', 'Guru', 'Kandidat'].map(m => (
+                <li key={m}><button onClick={() => setActiveMenu(m)} className={`w-full text-left px-5 py-4 hover:bg-gray-700 border-b border-gray-700 ${activeMenu === m ? 'bg-emerald-600 font-bold' : ''}`}>{m === 'Kandidat' ? '🎖️' : '👥'} Data {m}</button></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden relative">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="absolute top-1/2 -mt-10 left-0 z-20 bg-emerald-700 hover:bg-emerald-800 text-white w-10 h-20 rounded-r-2xl shadow-2xl flex items-center justify-center text-2xl font-black transition-all border-y-2 border-r-2 border-emerald-400">{sidebarOpen ? '❮' : '❯'}</button>
+            
+            <div className="p-6 pl-16 flex-1 overflow-y-auto">
+              <div className="flex flex-col md:flex-row justify-between mb-6 gap-4 border-b pb-4">
+                <div><h2 className="text-2xl font-black">Tabel {activeMenu}</h2><p className="text-sm font-bold text-gray-500">Jumlah: {filteredData.length}</p></div>
+                <div className="flex gap-2">
+                  {activeMenu === 'Siswa' && (<select className="border-2 p-2 rounded-lg font-bold" value={filterKelas} onChange={e => {setFilterKelas(e.target.value); setSelectedRows([]);}}><option value="Semua">Semua Kelas</option>{daftarKelasAdmin.map(k => <option key={k} value={k}>Kelas {k}</option>)}</select>)}
+                  <button onClick={() => setModalForm({ show: true, action: 'add', rowNum: null, rowData: {} })} className="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold">+ Tambah</button>
+                  {(activeMenu === 'Siswa' || activeMenu === 'Guru') && (<button onClick={handleHapusMassal} disabled={selectedRows.length === 0} className={`px-5 py-2.5 rounded-lg font-bold ${selectedRows.length > 0 ? 'bg-red-600 text-white' : 'bg-gray-300'}`}>🗑️ Hapus ({selectedRows.length})</button>)}
+                </div>
+              </div>
+
+              {loading ? <div className="text-center p-10 font-bold text-emerald-600 animate-pulse text-xl">Sinkronisasi Data...</div> : (
+                <div className="bg-white rounded-xl shadow overflow-x-auto border">
+                  <table className="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                      <tr className="bg-gray-800 text-white">
+                        {(activeMenu === 'Siswa' || activeMenu === 'Guru') && (<th className="p-4 w-10 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer" onChange={(e) => setSelectedRows(e.target.checked ? filteredData.map(r => r._rowNum) : [])} checked={filteredData.length > 0 && selectedRows.length === filteredData.length} /></th>)}
+                        <th className="p-4">Tindakan</th>{formSchema[activeMenu].map(h => <th key={h} className="p-4 font-semibold">{h.replace('_',' ')}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredData.map((row, i) => (
+                        <tr key={i} className={`border-b hover:bg-emerald-50 ${selectedRows.includes(row._rowNum) ? 'bg-blue-50' : ''}`}>
+                          {(activeMenu === 'Siswa' || activeMenu === 'Guru') && (<td className="p-4 text-center"><input type="checkbox" className="w-4 h-4 cursor-pointer" checked={selectedRows.includes(row._rowNum)} onChange={() => setSelectedRows(selectedRows.includes(row._rowNum) ? selectedRows.filter(r => r !== row._rowNum) : [...selectedRows, row._rowNum])} /></td>)}
+                          <td className="p-4"><button onClick={() => setModalForm({ show: true, action: 'edit', rowNum: row._rowNum, rowData: row })} className="bg-blue-100 text-blue-700 px-4 py-2 rounded font-bold text-xs">EDIT</button></td>
+                          {formSchema[activeMenu].map(h => (<td key={h} className="p-4 text-sm font-medium">{h === 'Foto_URL' && row[h] ? <button onClick={() => setImageModal(row[h])} className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-xs">🖼️ FOTO</button> : row[h]}</td>))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function PetugasDashboard() {
+      const [stats, setStats] = useState(null);
+      const [filterKategori, setFilterKategori] = useState('Semua');
+      const [filterStatus, setFilterStatus] = useState('Semua');
+
+      useEffect(() => { fetchAPI('getPetugasStats').then(res => setStats(res)); }, []);
+      if(!stats) return <div className="text-center text-emerald-600 p-10 font-bold animate-pulse text-xl">Memuat Rekapitulasi Suara...</div>;
+
+      const filteredPemilih = stats.listPemilih.filter(p => (filterKategori === 'Semua' || p.kelas === filterKategori) && (filterStatus === 'Semua' || p.status === filterStatus));
+
+      return (
+        <div className="space-y-8 fade-in pb-10">
+          <h2 className="text-3xl font-black text-emerald-800 text-center">Dashboard Rekapitulasi KPPS</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="glass-card p-6 rounded-2xl shadow-lg border-b-8 border-blue-500 text-center bg-white"><p className="text-gray-500 font-bold mb-1">Total DPT</p><h3 className="text-5xl font-black text-blue-700">{stats.totalPemilih}</h3></div>
+            <div className="glass-card p-6 rounded-2xl shadow-lg border-b-8 border-emerald-500 text-center bg-white"><p className="text-gray-500 font-bold mb-1">Suara Masuk</p><h3 className="text-5xl font-black text-emerald-700">{stats.sudahVote}</h3></div>
+            <div className="glass-card p-6 rounded-2xl shadow-lg border-b-8 border-orange-500 text-center bg-white"><p className="text-gray-500 font-bold mb-1">Partisipasi</p><h3 className="text-5xl font-black text-orange-600">{stats.persentase}%</h3></div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="glass-card p-6 rounded-2xl shadow bg-white">
+              <h3 className="font-bold text-xl mb-4 border-b pb-2">Partisipasi Kelas</h3>
+              <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
+                {Object.keys(stats.partisipasi).sort().map(kls => {
+                  let d = stats.partisipasi[kls]; let pct = d.total ? ((d.sudah/d.total)*100).toFixed(0) : 0;
+                  return (<div key={kls}><div className="flex justify-between text-sm font-bold mb-1"><span>{kls}</span><span>{d.sudah}/{d.total}</span></div><div className="w-full bg-gray-200 rounded-full h-3"><div className="bg-emerald-500 h-3 rounded-full" style={{width: `${pct}%`}}></div></div></div>);
+                })}
+              </div>
+            </div>
+
+            <div className="glass-card p-6 rounded-2xl shadow bg-white">
+              <h3 className="font-bold text-xl mb-4 border-b pb-2">Perolehan Suara Kandidat</h3>
+              <div className="space-y-6 max-h-80 overflow-y-auto pr-2">
+                {stats.hasilKandidat.map(k => {
+                  let pct = stats.sudahVote > 0 ? ((k.total / stats.sudahVote) * 100).toFixed(1) : 0;
+                  return (
+                    <div key={k.id} className="bg-blue-50 p-5 rounded-2xl border border-blue-200">
+                      <div className="flex justify-between text-xl font-black mb-2 text-blue-900"><span>{k.nama}</span><span>{k.total} Suara</span></div>
+                      <div className="w-full bg-gray-300 rounded-full h-4 mb-3"><div className="bg-blue-600 h-4 rounded-full" style={{ width: `${pct}%` }}></div></div>
+                      <div className="flex flex-wrap gap-2">{Object.keys(k.perKelas).sort().map(kls => (<span key={kls} className="text-xs bg-white border border-blue-200 px-2 py-1 rounded-md font-medium">{kls}: <b className="text-blue-700">{k.perKelas[kls]}</b></span>))}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
