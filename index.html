@@ -30,18 +30,19 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
+    // ==========================================================
     // 🔴 [PENTING] PASTE URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+    // ==========================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbzM5kTreVvqb1EUQpP_r8lHu6jveeZj0FaFcbpiVwpluI7Li5bC_tGBKPTGlueQLc_r/exec"; 
     
-    // Konfigurasi Link Gambar Default (Bisa pakai link GitHub atau Drive Thumbnail)
-    const LOGO_URL = "https://drive.google.com/thumbnail?id=1fBknq6ubJX72f-wgU56xdxJyO06p1m2i&sz=w500";
+    // Pastikan ini menggunakan link Logo dari GitHub Anda
+    const LOGO_URL = "https://kegiatan-m3b.github.io/evote-osim/LOGOM3B.png";
 
-    // FUNGSI KOMUNIKASI FETCH API KE GOOGLE SHEETS
     async function fetchAPI(action, payload = {}) {
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Wajib text/plain untuk GAS
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action, payload })
         });
         const json = await response.json();
@@ -60,7 +61,7 @@
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-emerald-700 text-white p-4 flex justify-between items-center">
               <h3 className="font-bold text-lg">{title}</h3>
-              <button onClick={onClose} className="text-white hover:text-red-300 font-bold text-xl">×</button>
+              {onClose && <button onClick={onClose} className="text-white hover:text-red-300 font-bold text-xl">×</button>}
             </div>
             <div className="p-6 overflow-y-auto">{children}</div>
           </div>
@@ -87,7 +88,7 @@
           <header className="bg-emerald-700 text-white p-4 shadow-lg sticky top-0 z-50">
             <div className="container mx-auto flex justify-between items-center max-w-6xl">
               <div className="flex items-center space-x-3">
-                <img src={LOGO_URL} alt="Logo" className="w-12 h-12 bg-white rounded-full p-0.5 object-cover" />
+                <img src={LOGO_URL} alt="Logo" className="w-12 h-12 bg-white rounded-full p-0.5 object-cover" onError={(e)=>{e.target.style.display='none'}} />
                 <div>
                   <h1 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">E-Vote OSIM</h1>
                   <p className="text-xs md:text-sm text-emerald-100">MTsN 3 Banyuwangi</p>
@@ -108,7 +109,7 @@
                 <div className="text-emerald-600 font-bold text-xl">Menghubungkan ke Database...</div>
               </div>
             )}
-            {!loading && view === 'home' && <VotingFlow data={data} onReload={loadInitialData} />}
+            {!loading && view === 'home' && <VotingFlow data={data} setData={setData} />}
             {view === 'login' && <LoginScreen setView={setView} />}
             {view === 'admin' && <AdminDashboard />}
             {view === 'petugas' && <PetugasDashboard />}
@@ -117,7 +118,7 @@
       );
     }
 
-    function VotingFlow({ data, onReload }) {
+    function VotingFlow({ data, setData }) {
       const [step, setStep] = useState(1);
       const [kategori, setKategori] = useState('');
       const [pilihanKelas, setPilihanKelas] = useState('');
@@ -133,10 +134,26 @@
         setIsSubmitting(true);
         fetchAPI('submitVote', { kategori, namaPemilih, idKandidat: kandidatPilihan })
           .then(res => {
-            setAlertInfo({ show: true, msg: res.message });
-            setStep(1); setKategori(''); setPilihanKelas(''); setNamaPemilih(''); setKandidatPilihan(null);
-            setIsSubmitting(false); onReload();
-          }).catch(() => setIsSubmitting(false));
+            // [TRIK PERCEPATAN] Update status di memori lokal agar tidak perlu loading panjang
+            let kategoriKey = kategori.toLowerCase();
+            let pemilihIndex = data[kategoriKey].findIndex(p => p.nama === namaPemilih);
+            if(pemilihIndex > -1) {
+              data[kategoriKey][pemilihIndex].status = 'Sudah';
+              setData({...data}); // Terapkan perubahan
+            }
+            
+            // Tampilkan Pesan Sukses Custom
+            setAlertInfo({ show: true, msg: "Terimakasih sudah meluangkan waktu, suara anda sangat berarti" });
+            setIsSubmitting(false);
+          }).catch(() => {
+            setIsSubmitting(false);
+            alert("Gagal mengirim suara. Periksa koneksi internet.");
+          });
+      };
+
+      const handleTutupPesan = () => {
+        setAlertInfo({show: false, msg: ''});
+        setStep(1); setKategori(''); setPilihanKelas(''); setNamaPemilih(''); setKandidatPilihan(null);
       };
 
       const handleCoblos = (id) => {
@@ -147,11 +164,14 @@
 
       return (
         <div className="glass-card rounded-3xl shadow-2xl p-6 md:p-8 max-w-5xl mx-auto">
-          <Modal isOpen={alertInfo.show} onClose={() => setAlertInfo({show:false, msg:''})} title="Informasi Sistem">
+          {/* Pop-up Pesan Custom */}
+          <Modal isOpen={alertInfo.show} title="Pemilihan Berhasil!">
             <div className="text-center py-4">
-              <div className="text-5xl mb-4">🎉</div>
-              <p className="text-lg font-bold text-emerald-700">{alertInfo.msg}</p>
-              <button onClick={() => setAlertInfo({show:false, msg:''})} className="mt-6 bg-emerald-600 text-white px-6 py-2 rounded-xl cursor-pointer">OK, Tutup</button>
+              <div className="text-6xl mb-6">🎉</div>
+              <p className="text-2xl font-black text-emerald-700 leading-tight">{alertInfo.msg}</p>
+              <button onClick={handleTutupPesan} className="mt-8 bg-emerald-600 text-white px-8 py-3 text-lg font-bold rounded-2xl cursor-pointer hover:bg-emerald-700 shadow-lg transition-all active:scale-95">
+                Selesai & Kembali
+              </button>
             </div>
           </Modal>
 
@@ -160,7 +180,7 @@
               <h2 className="text-3xl font-black mb-8 text-emerald-800">Masuk Sebagai Pemilih?</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
                 <button onClick={() => { setKategori('Guru'); setStep(2); }} className="p-12 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-3xl cursor-pointer font-bold text-2xl shadow-sm transform transition hover:-translate-y-1">👨‍🏫 Guru / Pegawai</button>
-                <button onClick={() => { setKategori('Siswa'); setStep(2); }} className="p-12 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 rounded-3xl cursor-pointer font-bold text-2xl shadow-sm transform transition hover:-translate-y-1">👨‍🎓 Siswa MTsN</button>
+                <button onClick={() => { setKategori('Siswa'); setStep(2); }} className="p-12 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 rounded-3xl cursor-pointer font-bold text-2xl shadow-sm transform transition hover:-translate-y-1">👨‍🎓 Siswa MTsN 3</button>
               </div>
             </div>
           )}
@@ -236,12 +256,17 @@
                 ))}
               </div>
 
-              <div className="mt-12 flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-6 rounded-2xl border-2 border-gray-200 gap-4">
+              <div className="mt-12 flex flex-col sm:flex-row justify-between items-center sm:items-end bg-gray-50 p-6 rounded-2xl border-2 border-gray-200 gap-6">
                 <button onClick={() => setStep(2)} className="w-full sm:w-auto px-8 py-4 bg-gray-300 hover:bg-gray-400 rounded-2xl cursor-pointer font-bold text-gray-700 text-lg">Ganti Identitas</button>
-                <button onClick={handleSubmit} disabled={!kandidatPilihan || isSubmitting || coblosAnim !== null} 
-                  className="w-full sm:w-auto px-12 py-5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white font-black text-2xl disabled:opacity-50 cursor-pointer shadow-xl transform transition active:scale-95 flex items-center justify-center">
-                  {isSubmitting ? 'Mengirim Suara...' : (kandidatPilihan ? 'KIRIM KE KOTAK SUARA 🗳️' : 'BELUM ADA PILIHAN')}
-                </button>
+                
+                <div className="flex flex-col w-full sm:w-auto items-center sm:items-end">
+                  <span className="text-emerald-800 font-black text-lg mb-2">👤 Pemilih: <span className="text-blue-700">{namaPemilih}</span></span>
+                  
+                  <button onClick={handleSubmit} disabled={!kandidatPilihan || isSubmitting || coblosAnim !== null} 
+                    className="w-full px-10 py-5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white font-black text-2xl disabled:opacity-50 cursor-pointer shadow-xl transform transition active:scale-95 flex items-center justify-center">
+                    {isSubmitting ? 'Mengirim Suara...' : (kandidatPilihan ? 'KIRIM KE KOTAK SUARA 🗳️' : 'BELUM ADA PILIHAN')}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -320,16 +345,6 @@
         }
       };
 
-      // FOTO PASTE (GitHub Ready)
-      const handleFotoPaste = (e) => {
-        let url = e.target.value;
-        const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-        if (match && match[1]) {
-          url = `https://lh3.googleusercontent.com/d/${match[1]}=s1000`; 
-        }
-        setModalForm(prev => ({ ...prev, rowData: { ...prev.rowData, Foto_URL: url } }));
-      };
-
       const daftarKelasAdmin = activeMenu === 'Siswa' ? [...new Set(tableData.map(r => r.Kelas))].filter(Boolean).sort() : [];
       const filteredData = tableData.filter(row => activeMenu !== 'Siswa' || filterKelas === 'Semua' || row.Kelas === filterKelas);
 
@@ -343,8 +358,8 @@
                   <label className="block text-sm font-bold mb-1">{field.replace('_', ' ')}</label>
                   {field === 'Foto_URL' ? (
                     <div className="space-y-1">
-                      <input type="text" className="w-full p-3 border rounded bg-gray-50" value={modalForm.rowData[field] || ''} onChange={handleFotoPaste} placeholder="Paste link foto (Drive / GitHub)..." />
-                      <p className="text-[11px] text-gray-500">*Gunakan link dari repository GitHub Anda (contoh: https://github.com/.../foto.jpg) agar 100% aman anti blokir.</p>
+                      <input type="text" className="w-full p-3 border rounded bg-gray-50" value={modalForm.rowData[field] || ''} onChange={(e) => setModalForm(prev => ({ ...prev, rowData: { ...prev.rowData, [field]: e.target.value } }))} placeholder="Paste link foto..." />
+                      <p className="text-[11px] text-gray-500">*Paste URL gambar dari repository GitHub Anda (misal: https://kegiatan-m3b.github.io/evote-osim/kandidat1.jpg).</p>
                     </div>
                   ) : (<input type="text" className="w-full p-3 border rounded" value={modalForm.rowData[field] || ''} onChange={(e) => setModalForm(prev => ({ ...prev, rowData: { ...prev.rowData, [field]: e.target.value } }))} required />)}
                 </div>
@@ -447,6 +462,46 @@
                   );
                 })}
               </div>
+            </div>
+          </div>
+
+          {/* TABEL DAFTAR PEMILIH DIKEMBALIKAN */}
+          <div className="glass-card p-6 rounded-2xl shadow bg-white mt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4 gap-4">
+              <h3 className="font-bold text-xl text-gray-800">Daftar Pemilih</h3>
+              <div className="flex gap-2">
+                <select className="border-2 p-2 rounded-lg font-bold text-sm" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
+                  <option value="Semua">Semua Kelas</option>
+                  {stats.daftarKelas.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+                <select className="border-2 p-2 rounded-lg font-bold text-sm" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                  <option value="Semua">Semua Status</option>
+                  <option value="Sudah">Sudah Coblos</option>
+                  <option value="Belum">Belum Coblos</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto border-2 rounded-xl">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead className="sticky top-0 bg-gray-800 text-white z-10">
+                  <tr><th className="p-4 border-b">Nama Pemilih</th><th className="p-4 border-b">Kelas</th><th className="p-4 border-b text-center">Status</th></tr>
+                </thead>
+                <tbody>
+                  {filteredPemilih.length === 0 ? <tr><td colSpan="3" className="p-6 text-center text-gray-500 font-bold">Data kosong.</td></tr> : null}
+                  {filteredPemilih.map((p, i) => (
+                    <tr key={i} className="border-b hover:bg-gray-50 font-medium">
+                      <td className="p-4">{p.nama}</td>
+                      <td className="p-4">{p.kelas}</td>
+                      <td className="p-4 text-center">
+                        <span className={`px-3 py-1.5 rounded-lg text-xs font-black ${p.status === 'Sudah' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {p.status === 'Sudah' ? '✔ SUDAH' : '❌ BELUM'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
