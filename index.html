@@ -27,7 +27,7 @@
     }
     .animate-paku { animation: pakuCoblos 0.8s ease-in-out forwards; }
     
-    /* Animasi Lubang Sobek */
+    /* Animasi Lubang Sobek (Diubah jadi putih) */
     @keyframes lubangCoblos { 
       0% { opacity: 0; transform: scale(0) rotate(-20deg); } 
       49% { opacity: 0; transform: scale(0) rotate(-20deg); } 
@@ -55,7 +55,7 @@
     // ==========================================================
     // 🔴 [PENTING] PASTE URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
     // ==========================================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbzM5kTreVvqb1EUQpP_r8lHu6jveeZj0FaFcbpiVwpluI7Li5bC_tGBKPTGlueQLc_r/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbzfetSLPLc3BSjTInK4dce1P1rWXeRsPUhOmyKRj_829HRjSXKk2fU2Ou4RCMK0pCXr/exec"; 
     
     const LOGO_URL = "https://kegiatan-m3b.github.io/evote-osim/LOGOM3B.png";
 
@@ -70,7 +70,7 @@
         if (json.status === 'error') throw new Error(json.message);
         return json.data;
       } catch (err) {
-        alert("Gagal terhubung ke Server. Pastikan koneksi internet stabil.");
+        console.error("Fetch Error:", err);
         throw err;
       }
     }
@@ -143,29 +143,32 @@
       const [pilihanKelas, setPilihanKelas] = useState('');
       const [namaPemilih, setNamaPemilih] = useState('');
       const [kandidatPilihan, setKandidatPilihan] = useState(null);
-      const [isSubmitting, setIsSubmitting] = useState(false);
       const [alertInfo, setAlertInfo] = useState({ show: false, msg: '' });
       const [coblosAnim, setCoblosAnim] = useState(null); 
 
       const filterNama = kategori === 'Guru' ? data.guru : data.siswa.filter(s => s.kelas === pilihanKelas);
 
       const handleSubmit = () => {
-        setIsSubmitting(true);
+        // [FITUR PERCEPATAN / OPTIMISTIC UI UPDATE]
+        // 1. Langsung tampilkan pesan sukses (Delay 0 Detik untuk Siswa)
+        setAlertInfo({ show: true, msg: "Terimakasih sudah meluangkan waktu, suara anda sangat berarti" });
+
+        // 2. Langsung ubah kotak nama menjadi merah (Sudah memilih) di memori aplikasi
+        let kategoriKey = kategori.toLowerCase();
+        let pemilihIndex = data[kategoriKey].findIndex(p => p.nama === namaPemilih);
+        if(pemilihIndex > -1) {
+          data[kategoriKey][pemilihIndex].status = 'Sudah';
+          setData({...data}); 
+        }
+
+        // 3. Kirim data ke background secara diam-diam (LockService Server menangani tabrakannya)
         fetchAPI('submitVote', { kategori, namaPemilih, idKandidat: kandidatPilihan })
-          .then(res => {
-            let kategoriKey = kategori.toLowerCase();
-            let pemilihIndex = data[kategoriKey].findIndex(p => p.nama === namaPemilih);
-            if(pemilihIndex > -1) {
-              data[kategoriKey][pemilihIndex].status = 'Sudah';
-              setData({...data}); 
-            }
-            setAlertInfo({ show: true, msg: "Terimakasih sudah meluangkan waktu, suara anda sangat berarti" });
-            setIsSubmitting(false);
-          }).catch(() => { setIsSubmitting(false); alert("Gagal mengirim suara. Periksa koneksi internet."); });
+          .catch((err) => console.log("Gagal sync background:", err));
       };
 
       const handleTutupPesan = () => {
-        setAlertInfo({show: false, msg: ''}); setStep(1); setKategori(''); setPilihanKelas(''); setNamaPemilih(''); setKandidatPilihan(null);
+        setAlertInfo({show: false, msg: ''}); 
+        setStep(1); setKategori(''); setPilihanKelas(''); setNamaPemilih(''); setKandidatPilihan(null);
       };
 
       const handleCoblos = (id) => {
@@ -220,7 +223,6 @@
                 <div className="mb-10 fade-in">
                   <label className="block text-sm font-bold mb-6 text-gray-600 text-center uppercase tracking-widest">Ketuk Kotak Nama Anda</label>
                   
-                  {/* GRID KOTAK NAMA */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {filterNama.map(p => {
                       const isSudah = p.status === 'Sudah';
@@ -267,24 +269,22 @@
                     className={`relative cursor-pointer rounded-3xl overflow-hidden border-[6px] transition-all duration-300 transform 
                     ${kandidatPilihan === k.id ? 'border-emerald-600 ring-[10px] ring-emerald-200 shadow-2xl scale-[1.02]' : 'border-gray-200 shadow-xl bg-white hover:border-emerald-400'}`}>
                     
-                    {/* EFEK ANIMASI PAKU RAKSASA & LUBANG SOBEK */}
                     {coblosAnim === k.id && (
                       <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
                         <svg className="w-56 h-56 md:w-72 md:h-72 text-gray-800 drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] animate-paku absolute" fill="currentColor" viewBox="0 0 24 24"><path d="M11 2h2v16l-1 4-1-4V2zm-3 2h8a1 1 0 010 2H8a1 1 0 010-2z" /></svg>
                         
-                        {/* SVG Efek Sobek */}
-                        <svg className="w-24 h-24 md:w-32 md:h-32 text-black absolute animate-lubang drop-shadow-xl" viewBox="0 0 100 100">
-                           <path d="M45,5 L60,15 L85,10 L75,35 L95,55 L75,70 L85,90 L55,80 L40,95 L20,80 L5,90 L15,65 L0,45 L20,30 L10,10 L35,20 Z" fill="#222"/>
-                           <circle cx="50" cy="50" r="32" fill="#000"/>
+                        {/* EFEK LUBANG PUTIH SOBEK */}
+                        <svg className="w-24 h-24 md:w-32 md:h-32 absolute animate-lubang drop-shadow-2xl" viewBox="0 0 100 100">
+                           <path d="M45,5 L60,15 L85,10 L75,35 L95,55 L75,70 L85,90 L55,80 L40,95 L20,80 L5,90 L15,65 L0,45 L20,30 L10,10 L35,20 Z" fill="#e5e7eb"/>
+                           <circle cx="50" cy="50" r="34" fill="#ffffff"/>
                         </svg>
                       </div>
                     )}
-                    {/* LUBANG SOBEK PERMANEN SETELAH COBLOS */}
                     {kandidatPilihan === k.id && coblosAnim === null && (
                       <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
-                        <svg className="w-24 h-24 md:w-32 md:h-32 text-black absolute drop-shadow-xl opacity-95" viewBox="0 0 100 100">
-                           <path d="M45,5 L60,15 L85,10 L75,35 L95,55 L75,70 L85,90 L55,80 L40,95 L20,80 L5,90 L15,65 L0,45 L20,30 L10,10 L35,20 Z" fill="#222"/>
-                           <circle cx="50" cy="50" r="32" fill="#000"/>
+                        <svg className="w-24 h-24 md:w-32 md:h-32 absolute drop-shadow-2xl opacity-95" viewBox="0 0 100 100">
+                           <path d="M45,5 L60,15 L85,10 L75,35 L95,55 L75,70 L85,90 L55,80 L40,95 L20,80 L5,90 L15,65 L0,45 L20,30 L10,10 L35,20 Z" fill="#e5e7eb"/>
+                           <circle cx="50" cy="50" r="34" fill="#ffffff"/>
                         </svg>
                       </div>
                     )}
@@ -307,9 +307,9 @@
                 <button onClick={() => setStep(2)} className="w-full sm:w-auto px-8 py-4 bg-gray-300 hover:bg-gray-400 rounded-2xl cursor-pointer font-bold text-gray-700 text-lg">Ganti Identitas</button>
                 <div className="flex flex-col w-full sm:w-auto items-center sm:items-end">
                   <span className="text-emerald-800 font-black text-lg mb-2">👤 Pemilih: <span className="text-blue-700">{namaPemilih}</span></span>
-                  <button onClick={handleSubmit} disabled={!kandidatPilihan || isSubmitting || coblosAnim !== null} 
+                  <button onClick={handleSubmit} disabled={!kandidatPilihan || coblosAnim !== null} 
                     className="w-full px-10 py-5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white font-black text-2xl disabled:opacity-50 cursor-pointer shadow-xl transform transition active:scale-95 flex items-center justify-center">
-                    {isSubmitting ? 'Mengirim Suara...' : (kandidatPilihan ? 'KIRIM KE KOTAK SUARA 🗳️' : 'BELUM ADA PILIHAN')}
+                    {kandidatPilihan ? 'KIRIM KE KOTAK SUARA 🗳️' : 'BELUM ADA PILIHAN'}
                   </button>
                 </div>
               </div>
