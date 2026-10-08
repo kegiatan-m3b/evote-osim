@@ -17,13 +17,26 @@
     ::-webkit-scrollbar { height: 8px; width: 8px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     
-    /* Animasi Paku */
-    @keyframes pakuCoblos { 0% { transform: translateY(-100px) rotate(15deg) scale(1.5); opacity: 0; } 20% { opacity: 1; } 50% { transform: translateY(10px) rotate(0deg) scale(1); } 70% { transform: translateY(0px) rotate(0deg) scale(1); } 100% { transform: translateY(-50px) rotate(0deg) scale(0.8); opacity: 0; } }
+    /* Animasi Paku Diperbesar */
+    @keyframes pakuCoblos { 
+      0% { transform: translateY(-200px) rotate(20deg) scale(1.5); opacity: 0; } 
+      20% { opacity: 1; } 
+      50% { transform: translateY(15px) rotate(0deg) scale(1); } 
+      70% { transform: translateY(0px) rotate(0deg) scale(1); } 
+      100% { transform: translateY(-100px) rotate(0deg) scale(0.8); opacity: 0; } 
+    }
     .animate-paku { animation: pakuCoblos 0.8s ease-in-out forwards; }
-    @keyframes lubangCoblos { 0% { opacity: 0; transform: scale(0); } 49% { opacity: 0; transform: scale(0); } 50% { opacity: 1; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
+    
+    /* Animasi Lubang Sobek */
+    @keyframes lubangCoblos { 
+      0% { opacity: 0; transform: scale(0) rotate(-20deg); } 
+      49% { opacity: 0; transform: scale(0) rotate(-20deg); } 
+      50% { opacity: 1; transform: scale(1.4) rotate(10deg); } 
+      100% { opacity: 1; transform: scale(1) rotate(0deg); } 
+    }
     .animate-lubang { animation: lubangCoblos 0.8s ease-in-out forwards; }
 
-    /* KONFIGURASI CETAK (PRINT) CSS */
+    /* Konfigurasi Cetak (Print) */
     @media print {
       body * { visibility: hidden !important; }
       #area-cetak, #area-cetak * { visibility: visible !important; color: black !important; }
@@ -92,7 +105,7 @@
       return (
         <div className="min-h-screen text-gray-800 flex flex-col">
           <header className="bg-emerald-700 text-white p-4 shadow-lg sticky top-0 z-50 no-print">
-            <div className="container mx-auto flex justify-between items-center max-w-6xl">
+            <div className="container mx-auto flex justify-between items-center max-w-7xl">
               <div className="flex items-center space-x-3">
                 <img src={LOGO_URL} alt="Logo" className="w-12 h-12 bg-white rounded-full p-0.5 object-cover" onError={(e)=>{e.target.style.display='none'}} />
                 <div>
@@ -108,7 +121,7 @@
             </div>
           </header>
 
-          <main className={`flex-1 ${view === 'admin' ? '' : 'container mx-auto p-4 max-w-6xl mt-4'} fade-in`}>
+          <main className={`flex-1 ${view === 'admin' ? '' : 'container mx-auto p-4 max-w-7xl mt-4'} fade-in`}>
             {loading && view === 'home' && (
               <div className="text-center mt-20">
                 <svg className="animate-spin h-10 w-10 text-emerald-600 mx-auto mb-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
@@ -125,7 +138,6 @@
     }
 
     function VotingFlow({ data, setData }) {
-      // ... [KODE VOTING FLOW SAMA PERSIS SEPERTI SEBELUMNYA] ...
       const [step, setStep] = useState(1);
       const [kategori, setKategori] = useState('');
       const [pilihanKelas, setPilihanKelas] = useState('');
@@ -162,7 +174,7 @@
       };
 
       return (
-        <div className="glass-card rounded-3xl shadow-2xl p-6 md:p-8 max-w-5xl mx-auto">
+        <div className="glass-card rounded-3xl shadow-2xl p-6 md:p-8 max-w-6xl mx-auto border-t-8 border-emerald-600">
           <Modal isOpen={alertInfo.show} title="Pemilihan Berhasil!">
             <div className="text-center py-4">
               <div className="text-6xl mb-6">🎉</div>
@@ -174,39 +186,70 @@
           </Modal>
 
           {step === 1 && (
-            <div className="text-center fade-in">
-              <h2 className="text-3xl font-black mb-8 text-emerald-800">Masuk Sebagai Pemilih?</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                <button onClick={() => { setKategori('Guru'); setStep(2); }} className="p-12 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-3xl cursor-pointer font-bold text-2xl shadow-sm transform transition hover:-translate-y-1">👨‍🏫 Guru / Pegawai</button>
-                <button onClick={() => { setKategori('Siswa'); setStep(2); }} className="p-12 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 rounded-3xl cursor-pointer font-bold text-2xl shadow-sm transform transition hover:-translate-y-1">👨‍🎓 Siswa MTsN 3</button>
+            <div className="text-center fade-in py-10">
+              <h2 className="text-3xl md:text-4xl font-black mb-12 text-emerald-800">Masuk Sebagai Pemilih?</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <button onClick={() => { setKategori('Guru'); setStep(2); }} className="p-14 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-3xl cursor-pointer shadow-md transform transition hover:-translate-y-2">
+                  <span className="text-6xl block mb-4">👨‍🏫</span>
+                  <span className="font-black text-2xl text-blue-900">Guru / Pegawai</span>
+                </button>
+                <button onClick={() => { setKategori('Siswa'); setStep(2); }} className="p-14 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 rounded-3xl cursor-pointer shadow-md transform transition hover:-translate-y-2">
+                  <span className="text-6xl block mb-4">👨‍🎓</span>
+                  <span className="font-black text-2xl text-emerald-900">Siswa MTsN 3</span>
+                </button>
               </div>
             </div>
           )}
           
           {step === 2 && (
-            <div className="fade-in max-w-md mx-auto">
-              <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Identitas {kategori}</h2>
+            <div className="fade-in max-w-5xl mx-auto">
+              <h2 className="text-3xl font-black mb-8 text-center text-gray-800 border-b-2 pb-4">Identitas {kategori}</h2>
+              
               {kategori === 'Siswa' && (
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold mb-2 text-gray-600">Pilih Kelas</label>
-                  <select className="w-full p-4 border-2 rounded-2xl bg-white text-lg font-medium outline-none focus:border-emerald-500" value={pilihanKelas} onChange={(e) => setPilihanKelas(e.target.value)}>
-                    <option value="">-- Pilih Kelas --</option>
+                <div className="mb-10 max-w-md mx-auto">
+                  <label className="block text-sm font-bold mb-3 text-gray-600 text-center uppercase tracking-widest">Pilih Kelas</label>
+                  <select className="w-full p-4 border-2 rounded-2xl bg-white text-xl font-bold outline-none focus:border-emerald-500 focus:ring-4 ring-emerald-100 text-center shadow-sm" 
+                    value={pilihanKelas} onChange={(e) => {setPilihanKelas(e.target.value); setNamaPemilih('');}}>
+                    <option value="">-- PILIH KELAS ANDA --</option>
                     {data.kelas.map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
                 </div>
               )}
+              
               {(kategori === 'Guru' || (kategori === 'Siswa' && pilihanKelas)) && (
-                <div className="mb-8 fade-in">
-                  <label className="block text-sm font-semibold mb-2 text-gray-600">Pilih Nama Anda</label>
-                  <select className="w-full p-4 border-2 rounded-2xl bg-white text-lg font-medium outline-none focus:border-emerald-500" value={namaPemilih} onChange={(e) => setNamaPemilih(e.target.value)}>
-                    <option value="">-- Pilih Nama --</option>
-                    {filterNama.map(p => <option key={p.id} value={p.nama} disabled={p.status === 'Sudah'}>{p.nama} {p.status === 'Sudah' ? '(Telah Memilih)' : ''}</option>)}
-                  </select>
+                <div className="mb-10 fade-in">
+                  <label className="block text-sm font-bold mb-6 text-gray-600 text-center uppercase tracking-widest">Ketuk Kotak Nama Anda</label>
+                  
+                  {/* GRID KOTAK NAMA */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {filterNama.map(p => {
+                      const isSudah = p.status === 'Sudah';
+                      const isSelected = namaPemilih === p.nama;
+                      return (
+                        <button 
+                          key={p.id}
+                          disabled={isSudah}
+                          onClick={() => setNamaPemilih(p.nama)}
+                          className={`relative p-4 rounded-xl border-2 font-bold transition-all text-sm md:text-base flex flex-col items-center justify-center min-h-[90px] shadow-sm
+                            ${isSudah 
+                              ? 'border-red-300 bg-red-50 text-red-500 cursor-not-allowed opacity-75' 
+                              : isSelected 
+                                ? 'border-emerald-600 bg-emerald-600 text-white shadow-lg transform scale-105 ring-4 ring-emerald-200' 
+                                : 'border-emerald-500 bg-white text-emerald-800 hover:bg-emerald-50 hover:shadow-md cursor-pointer'}`}
+                        >
+                          <span className="text-center leading-tight">{p.nama}</span>
+                          {isSudah && <span className="absolute bottom-2 text-[10px] bg-red-200 text-red-800 px-2 py-0.5 rounded-full uppercase tracking-wider">Telah Memilih</span>}
+                        </button>
+                      );
+                    })}
+                    {filterNama.length === 0 && <div className="col-span-full text-center p-10 text-gray-500 font-bold bg-gray-50 rounded-xl border-2 border-dashed">Belum ada data.</div>}
+                  </div>
                 </div>
               )}
-              <div className="flex justify-between mt-8">
-                <button onClick={() => setStep(1)} className="px-6 py-4 bg-gray-200 rounded-2xl cursor-pointer font-bold text-gray-700">Kembali</button>
-                <button onClick={() => setStep(3)} disabled={!namaPemilih} className="px-8 py-4 bg-emerald-600 rounded-2xl text-white font-bold disabled:opacity-50 cursor-pointer shadow-lg hover:bg-emerald-700">Buka Surat Suara ➔</button>
+              
+              <div className="flex justify-center gap-6 mt-12 max-w-lg mx-auto">
+                <button onClick={() => {setStep(1); setNamaPemilih(''); setPilihanKelas('');}} className="w-1/3 py-4 bg-gray-200 rounded-2xl cursor-pointer font-bold text-gray-700 hover:bg-gray-300 transition-colors">Batal</button>
+                <button onClick={() => setStep(3)} disabled={!namaPemilih} className="w-2/3 py-4 bg-emerald-600 rounded-2xl text-white font-bold disabled:opacity-50 cursor-pointer shadow-lg hover:bg-emerald-700 transition-transform active:scale-95">Buka Surat Suara ➔</button>
               </div>
             </div>
           )}
@@ -223,15 +266,26 @@
                   <div key={k.id} onClick={() => handleCoblos(k.id)} 
                     className={`relative cursor-pointer rounded-3xl overflow-hidden border-[6px] transition-all duration-300 transform 
                     ${kandidatPilihan === k.id ? 'border-emerald-600 ring-[10px] ring-emerald-200 shadow-2xl scale-[1.02]' : 'border-gray-200 shadow-xl bg-white hover:border-emerald-400'}`}>
+                    
+                    {/* EFEK ANIMASI PAKU RAKSASA & LUBANG SOBEK */}
                     {coblosAnim === k.id && (
                       <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-                        <svg className="w-40 h-40 text-gray-800 drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] animate-paku absolute" fill="currentColor" viewBox="0 0 24 24"><path d="M11 2h2v16l-1 4-1-4V2zm-3 2h8a1 1 0 010 2H8a1 1 0 010-2z" /></svg>
-                        <div className="w-10 h-10 bg-black rounded-full absolute animate-lubang shadow-[inset_0_3px_8px_rgba(0,0,0,0.9)]"></div>
+                        <svg className="w-56 h-56 md:w-72 md:h-72 text-gray-800 drop-shadow-[0_30px_30px_rgba(0,0,0,0.8)] animate-paku absolute" fill="currentColor" viewBox="0 0 24 24"><path d="M11 2h2v16l-1 4-1-4V2zm-3 2h8a1 1 0 010 2H8a1 1 0 010-2z" /></svg>
+                        
+                        {/* SVG Efek Sobek */}
+                        <svg className="w-24 h-24 md:w-32 md:h-32 text-black absolute animate-lubang drop-shadow-xl" viewBox="0 0 100 100">
+                           <path d="M45,5 L60,15 L85,10 L75,35 L95,55 L75,70 L85,90 L55,80 L40,95 L20,80 L5,90 L15,65 L0,45 L20,30 L10,10 L35,20 Z" fill="#222"/>
+                           <circle cx="50" cy="50" r="32" fill="#000"/>
+                        </svg>
                       </div>
                     )}
+                    {/* LUBANG SOBEK PERMANEN SETELAH COBLOS */}
                     {kandidatPilihan === k.id && coblosAnim === null && (
                       <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
-                        <div className="w-10 h-10 bg-black rounded-full shadow-[inset_0_3px_8px_rgba(0,0,0,0.9)] opacity-95"></div>
+                        <svg className="w-24 h-24 md:w-32 md:h-32 text-black absolute drop-shadow-xl opacity-95" viewBox="0 0 100 100">
+                           <path d="M45,5 L60,15 L85,10 L75,35 L95,55 L75,70 L85,90 L55,80 L40,95 L20,80 L5,90 L15,65 L0,45 L20,30 L10,10 L35,20 Z" fill="#222"/>
+                           <circle cx="50" cy="50" r="32" fill="#000"/>
+                        </svg>
                       </div>
                     )}
 
@@ -301,7 +355,7 @@
       );
     }
 
-    // --- DASHBOARD ADMIN --- (Tetap sama seperti versi sebelumnya)
+    // --- DASHBOARD ADMIN ---
     function AdminDashboard() {
       const [sidebarOpen, setSidebarOpen] = useState(true);
       const [activeMenu, setActiveMenu] = useState('Siswa');
@@ -324,8 +378,7 @@
       const handleSave = (e) => {
         e.preventDefault(); setLoading(true); setModalForm({ ...modalForm, show: false });
         const rowArray = formSchema[activeMenu].map(field => modalForm.rowData[field] || '');
-        fetchAPI('adminCrud', { sheetName: activeMenu, action: modalForm.action, rowNum: modalForm.rowNum, rowData: rowArray })
-          .then(() => loadData(activeMenu));
+        fetchAPI('adminCrud', { sheetName: activeMenu, action: modalForm.action, rowNum: modalForm.rowNum, rowData: rowArray }).then(() => loadData(activeMenu));
       };
 
       const handleHapusMassal = () => {
@@ -408,62 +461,39 @@
       );
     }
 
-    // --- DASHBOARD PETUGAS DENGAN BERITA ACARA ---
+    // --- DASHBOARD PETUGAS ---
     function PetugasDashboard() {
       const [stats, setStats] = useState(null);
-      const [activeTab, setActiveTab] = useState('Statistik'); // Tab Menu Petugas
-      
+      const [activeTab, setActiveTab] = useState('Statistik');
       const [filterKategori, setFilterKategori] = useState('Semua');
       const [filterStatus, setFilterStatus] = useState('Semua');
 
-      // State Form Berita Acara
-      const [formBA, setFormBA] = useState({
-        tanggal: '24 Agustus 2026',
-        namaPembina: '', nipPembina: '',
-        namaKepala: '', nipKepala: ''
-      });
+      const [formBA, setFormBA] = useState({ tanggal: '24 Agustus 2026', namaPembina: '', nipPembina: '', namaKepala: '', nipKepala: '' });
       const [showPreviewBA, setShowPreviewBA] = useState(false);
 
       useEffect(() => { fetchAPI('getPetugasStats').then(res => setStats(res)); }, []);
-      
       if(!stats) return <div className="text-center text-emerald-600 p-10 font-bold animate-pulse text-xl">Memuat Rekapitulasi Suara...</div>;
 
       const filteredPemilih = stats.listPemilih.filter(p => (filterKategori === 'Semua' || p.kelas === filterKategori) && (filterStatus === 'Semua' || p.status === filterStatus));
-      
-      // Cari Pemenang
       let kandidatUrut = [...stats.hasilKandidat].sort((a,b) => b.total - a.total);
       let pemenang = kandidatUrut.length > 0 ? kandidatUrut[0] : null;
 
-      const handleCetakPDF = () => {
-        window.print(); // Memanfaatkan CSS @media print
-      };
-
+      const handleCetakPDF = () => window.print();
       const handleUnduhWord = () => {
         const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Berita Acara</title></head><body>";
-        const footer = "</body></html>";
-        // Convert tailwind ke style inline murni khusus untuk word (minimalis)
-        const contentHTML = document.getElementById('area-cetak').innerHTML;
-        const html = header + contentHTML + footer;
+        const html = header + document.getElementById('area-cetak').innerHTML + "</body></html>";
         const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'Berita_Acara_Pemilihan_OSIM.doc';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
       };
 
       return (
         <div className="space-y-6 fade-in pb-10">
-          
-          {/* NAVIGASI TAB MENU PETUGAS (no-print agar tidak ikut tercetak) */}
           <div className="flex gap-4 justify-center mb-8 no-print">
-            <button onClick={() => setActiveTab('Statistik')} className={`px-8 py-3 rounded-xl font-bold transition-all shadow-md ${activeTab === 'Statistik' ? 'bg-emerald-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
-              📊 Statistik Suara
-            </button>
-            <button onClick={() => setActiveTab('BeritaAcara')} className={`px-8 py-3 rounded-xl font-bold transition-all shadow-md ${activeTab === 'BeritaAcara' ? 'bg-emerald-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
-              📝 Cetak Berita Acara
-            </button>
+            <button onClick={() => setActiveTab('Statistik')} className={`px-8 py-3 rounded-xl font-bold transition-all shadow-md ${activeTab === 'Statistik' ? 'bg-emerald-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>📊 Statistik Suara</button>
+            <button onClick={() => setActiveTab('BeritaAcara')} className={`px-8 py-3 rounded-xl font-bold transition-all shadow-md ${activeTab === 'BeritaAcara' ? 'bg-emerald-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>📝 Cetak Berita Acara</button>
           </div>
 
           {activeTab === 'Statistik' && (
@@ -531,130 +561,59 @@
           {activeTab === 'BeritaAcara' && (
             <div className="glass-card p-8 rounded-3xl shadow-xl max-w-3xl mx-auto bg-white fade-in">
               <h2 className="text-2xl font-black text-gray-800 mb-6 border-b pb-4">Input Data Berita Acara</h2>
-              
               <div className="space-y-5">
                 <div><label className="block text-sm font-bold mb-2">Tanggal Berita Acara</label><input type="text" className="w-full p-3 border-2 rounded-xl" value={formBA.tanggal} onChange={(e) => setFormBA({...formBA, tanggal: e.target.value})} /></div>
-                
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="block text-sm font-bold mb-2">Nama Pembina OSIM</label><input type="text" className="w-full p-3 border-2 rounded-xl" value={formBA.namaPembina} onChange={(e) => setFormBA({...formBA, namaPembina: e.target.value})} placeholder="Cth: Budi Santoso, S.Pd"/></div>
                   <div><label className="block text-sm font-bold mb-2">NIP Pembina OSIM</label><input type="text" className="w-full p-3 border-2 rounded-xl" value={formBA.nipPembina} onChange={(e) => setFormBA({...formBA, nipPembina: e.target.value})} placeholder="Isi NIP atau strip (-)"/></div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="block text-sm font-bold mb-2">Nama Kepala Madrasah</label><input type="text" className="w-full p-3 border-2 rounded-xl" value={formBA.namaKepala} onChange={(e) => setFormBA({...formBA, namaKepala: e.target.value})} placeholder="Cth: Drs. H. Fulan, M.Pd.I"/></div>
                   <div><label className="block text-sm font-bold mb-2">NIP Kepala Madrasah</label><input type="text" className="w-full p-3 border-2 rounded-xl" value={formBA.nipKepala} onChange={(e) => setFormBA({...formBA, nipKepala: e.target.value})} placeholder="Isi NIP atau strip (-)"/></div>
                 </div>
-
-                <button onClick={() => setShowPreviewBA(true)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl mt-6 text-lg cursor-pointer shadow-md">
-                  Pratinjau (Preview) Surat
-                </button>
+                <button onClick={() => setShowPreviewBA(true)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl mt-6 text-lg cursor-pointer shadow-md">Pratinjau (Preview) Surat</button>
               </div>
 
-              {/* MODAL PREVIEW SURAT & KOP */}
               <Modal isOpen={showPreviewBA} onClose={() => setShowPreviewBA(false)} title="Preview Berita Acara" maxWidth="max-w-4xl">
-                
-                {/* AREA YANG AKAN DICETAK (PDF / WORD) */}
                 <div id="area-cetak" style={{ fontFamily: 'Times New Roman, serif', color: 'black', padding: '20px' }}>
-                  
-                  {/* KOP SURAT */}
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                    <div style={{ width: '100px' }}>
-                      <img src={LOGO_URL} alt="Logo" style={{ width: '90px', height: '90px' }} />
-                    </div>
+                    <div style={{ width: '100px' }}><img src={LOGO_URL} alt="Logo" style={{ width: '90px', height: '90px' }} /></div>
                     <div style={{ flex: 1, textAlign: 'center' }}>
                       <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>KEMENTERIAN AGAMA REPUBLIK INDONESIA</h2>
                       <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>MADRASAH TSANAWIYAH NEGERI 3 BANYUWANGI</h2>
                       <p style={{ margin: 0, fontSize: '14px' }}>Jalan Raya No. 171, Desa Kebaman, Kecamatan Srono, Kabupaten Banyuwangi.</p>
                     </div>
                   </div>
-                  {/* GARIS BAWAH KOP (Double Line) */}
-                  <div style={{ borderBottom: '4px solid black', marginBottom: '2px' }}></div>
-                  <div style={{ borderBottom: '1px solid black', marginBottom: '20px' }}></div>
-
-                  {/* JUDUL */}
-                  <h3 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', textTransform: 'uppercase', marginBottom: '20px', lineHeight: '1.5' }}>
-                    BERITA ACARA PEMILIHAN CALON KETUA DAN WAKIL KETUA<br/>
-                    ORGANISASI SISWA INTRA MADRASAH (OSIM)<br/>
-                    MTsN 3 BANYUWANGI TAHUN KHIDMAT 2026/2027
-                  </h3>
-
-                  {/* ISI BERITA ACARA */}
-                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '15px' }}>
-                    Pada hari ini, telah dilaksanakan pemungutan dan penghitungan suara secara digital (E-Vote) dalam rangka Pemilihan Ketua dan Wakil Ketua Organisasi Siswa Intra Madrasah (OSIM) MTsN 3 Banyuwangi Tahun Khidmat 2026/2027.
-                  </p>
-                  
-                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '15px' }}>
-                    Adapun rincian data partisipasi pemilih adalah sebagai berikut: <br/>
-                    - Total Daftar Pemilih Tetap (DPT) : <b>{stats.totalPemilih}</b> Suara <br/>
-                    - Total Suara Masuk (Sah) : <b>{stats.sudahVote}</b> Suara <br/>
-                    - Total Tidak Memilih (Golput) : <b>{stats.totalPemilih - stats.sudahVote}</b> Suara
-                  </p>
-
-                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '10px' }}>
-                    Berdasarkan hasil penghitungan suara, diperoleh hasil perolehan suara masing-masing kandidat sebagai berikut:
-                  </p>
-
+                  <div style={{ borderBottom: '4px solid black', marginBottom: '2px' }}></div><div style={{ borderBottom: '1px solid black', marginBottom: '20px' }}></div>
+                  <h3 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', textTransform: 'uppercase', marginBottom: '20px', lineHeight: '1.5' }}>BERITA ACARA PEMILIHAN CALON KETUA DAN WAKIL KETUA<br/>ORGANISASI SISWA INTRA MADRASAH (OSIM)<br/>MTsN 3 BANYUWANGI TAHUN KHIDMAT 2026/2027</h3>
+                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '15px' }}>Pada hari ini, telah dilaksanakan pemungutan dan penghitungan suara secara digital (E-Vote) dalam rangka Pemilihan Ketua dan Wakil Ketua Organisasi Siswa Intra Madrasah (OSIM) MTsN 3 Banyuwangi Tahun Khidmat 2026/2027.</p>
+                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '15px' }}>Adapun rincian data partisipasi pemilih adalah sebagai berikut: <br/>- Total Daftar Pemilih Tetap (DPT) : <b>{stats.totalPemilih}</b> Suara <br/>- Total Suara Masuk (Sah) : <b>{stats.sudahVote}</b> Suara <br/>- Total Tidak Memilih (Golput) : <b>{stats.totalPemilih - stats.sudahVote}</b> Suara</p>
+                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '10px' }}>Berdasarkan hasil penghitungan suara, diperoleh hasil perolehan suara masing-masing kandidat sebagai berikut:</p>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
-                    <thead>
-                      <tr>
-                        <th style={{ border: '1px solid black', padding: '8px' }}>No. Urut</th>
-                        <th style={{ border: '1px solid black', padding: '8px' }}>Nama Pasangan Calon</th>
-                        <th style={{ border: '1px solid black', padding: '8px' }}>Perolehan Suara</th>
-                        <th style={{ border: '1px solid black', padding: '8px' }}>Persentase</th>
-                      </tr>
-                    </thead>
+                    <thead><tr><th style={{ border: '1px solid black', padding: '8px' }}>No. Urut</th><th style={{ border: '1px solid black', padding: '8px' }}>Nama Pasangan Calon</th><th style={{ border: '1px solid black', padding: '8px' }}>Perolehan Suara</th><th style={{ border: '1px solid black', padding: '8px' }}>Persentase</th></tr></thead>
                     <tbody>
                       {stats.hasilKandidat.map(k => {
                         let pct = stats.sudahVote > 0 ? ((k.total / stats.sudahVote) * 100).toFixed(2) : 0;
-                        return(
-                          <tr key={k.id}>
-                            <td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{k.nama.split(" &")[0] ? "Calon" : "-"}</td>
-                            <td style={{ border: '1px solid black', padding: '8px' }}>{k.nama}</td>
-                            <td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{k.total}</td>
-                            <td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{pct}%</td>
-                          </tr>
-                        )
+                        return(<tr key={k.id}><td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{k.nama.split(" &")[0] ? "Calon" : "-"}</td><td style={{ border: '1px solid black', padding: '8px' }}>{k.nama}</td><td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{k.total}</td><td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{pct}%</td></tr>)
                       })}
                     </tbody>
                   </table>
-
-                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '30px' }}>
-                    Berdasarkan rekapitulasi di atas, maka pasangan atas nama <b>{pemenang ? pemenang.nama : '................'}</b> ditetapkan sebagai Ketua dan Wakil Ketua OSIM MTsN 3 Banyuwangi terpilih Masa Bakti 2026/2027. <br/>
-                    Demikian Berita Acara ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.
-                  </p>
-
-                  {/* TANDA TANGAN */}
+                  <p style={{ textAlign: 'justify', lineHeight: '1.6', marginBottom: '30px' }}>Berdasarkan rekapitulasi di atas, maka pasangan atas nama <b>{pemenang ? pemenang.nama : '................'}</b> ditetapkan sebagai Ketua dan Wakil Ketua OSIM MTsN 3 Banyuwangi terpilih Masa Bakti 2026/2027. <br/>Demikian Berita Acara ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.</p>
                   <table style={{ width: '100%', border: 'none' }}>
                     <tbody>
                       <tr>
-                        <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top' }}>
-                          <br/><br/>
-                          Pembina OSIM,
-                          <br/><br/><br/><br/>
-                          <b><u>{formBA.namaPembina || '(....................................)'}</u></b><br/>
-                          NIP. {formBA.nipPembina || '....................................'}
-                        </td>
-                        <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top' }}>
-                          Banyuwangi, {formBA.tanggal}<br/>
-                          Mengetahui,<br/>
-                          Kepala MTsN 3 Banyuwangi,
-                          <br/><br/><br/><br/>
-                          <b><u>{formBA.namaKepala || '(....................................)'}</u></b><br/>
-                          NIP. {formBA.nipKepala || '....................................'}
-                        </td>
+                        <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top' }}><br/><br/>Pembina OSIM,<br/><br/><br/><br/><b><u>{formBA.namaPembina || '(....................................)'}</u></b><br/>NIP. {formBA.nipPembina || '....................................'}</td>
+                        <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top' }}>Banyuwangi, {formBA.tanggal}<br/>Mengetahui,<br/>Kepala MTsN 3 Banyuwangi,<br/><br/><br/><br/><b><u>{formBA.namaKepala || '(....................................)'}</u></b><br/>NIP. {formBA.nipKepala || '....................................'}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                
-                {/* TOMBOL AKSI (no-print) */}
                 <div className="flex justify-end gap-4 mt-8 pt-4 border-t no-print bg-gray-50 p-4 rounded-xl">
                   <button onClick={() => setShowPreviewBA(false)} className="px-6 py-2 bg-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-400">Kembali</button>
                   <button onClick={handleUnduhWord} className="px-6 py-2 bg-blue-600 rounded-lg font-bold text-white hover:bg-blue-700 cursor-pointer">📄 Unduh Word</button>
                   <button onClick={handleCetakPDF} className="px-6 py-2 bg-emerald-600 rounded-lg font-bold text-white hover:bg-emerald-700 cursor-pointer">🖨️ Cetak PDF</button>
                 </div>
               </Modal>
-
             </div>
           )}
         </div>
